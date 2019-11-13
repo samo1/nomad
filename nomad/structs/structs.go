@@ -30,6 +30,7 @@ import (
 	"github.com/hashicorp/nomad/acl"
 	"github.com/hashicorp/nomad/helper"
 	"github.com/hashicorp/nomad/helper/args"
+	"github.com/hashicorp/nomad/helper/constraints/semver"
 	"github.com/hashicorp/nomad/helper/uuid"
 	"github.com/hashicorp/nomad/lib/kheap"
 	psstructs "github.com/hashicorp/nomad/plugins/shared/structs"
@@ -6615,6 +6616,7 @@ const (
 	ConstraintDistinctHosts     = "distinct_hosts"
 	ConstraintRegex             = "regexp"
 	ConstraintVersion           = "version"
+	ConstraintSemver            = "semver"
 	ConstraintSetContains       = "set_contains"
 	ConstraintSetContainsAll    = "set_contains_all"
 	ConstraintSetContainsAny    = "set_contains_any"
@@ -6684,6 +6686,10 @@ func (c *Constraint) Validate() error {
 	case ConstraintVersion:
 		if _, err := version.NewConstraint(c.RTarget); err != nil {
 			mErr.Errors = append(mErr.Errors, fmt.Errorf("Version constraint is invalid: %v", err))
+		}
+	case ConstraintSemver:
+		if _, err := semver.NewConstraint(c.RTarget); err != nil {
+			mErr.Errors = append(mErr.Errors, fmt.Errorf("Semver constraint is invalid: %v", err))
 		}
 	case ConstraintDistinctProperty:
 		// If a count is set, make sure it is convertible to a uint64
@@ -6798,6 +6804,10 @@ func (a *Affinity) Validate() error {
 	case ConstraintVersion:
 		if _, err := version.NewConstraint(a.RTarget); err != nil {
 			mErr.Errors = append(mErr.Errors, fmt.Errorf("Version affinity is invalid: %v", err))
+		}
+	case ConstraintSemver:
+		if _, err := semver.NewConstraint(a.RTarget); err != nil {
+			mErr.Errors = append(mErr.Errors, fmt.Errorf("Semver affinity is invalid: %v", err))
 		}
 	case "=", "==", "is", "!=", "not", "<", "<=", ">", ">=":
 		if a.RTarget == "" {
