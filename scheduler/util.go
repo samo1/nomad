@@ -341,6 +341,15 @@ func tasksUpdated(jobA, jobB *structs.Job, taskGroup string) bool {
 	a := jobA.LookupTaskGroup(taskGroup)
 	b := jobB.LookupTaskGroup(taskGroup)
 
+	// Check Job level Affinities and Constraints
+	if !reflect.DeepEqual(jobA.Affinities, jobB.Affinities) {
+		return true
+	}
+
+	if !reflect.DeepEqual(jobA.Constraints, jobB.Constraints) {
+		return true
+	}
+
 	// If the number of tasks do not match, clearly there is an update
 	if len(a.Tasks) != len(b.Tasks) {
 		return true
@@ -353,6 +362,16 @@ func tasksUpdated(jobA, jobB *structs.Job, taskGroup string) bool {
 
 	// Check that the network resources haven't changed
 	if networkUpdated(a.Networks, b.Networks) {
+		return true
+	}
+
+	// Check that the task group affinities haven't changed
+	if !reflect.DeepEqual(a.Affinities, b.Affinities) {
+		return true
+	}
+
+	// Check that the task group constraints haven't changed
+	if !reflect.DeepEqual(a.Constraints, b.Constraints) {
 		return true
 	}
 
@@ -381,6 +400,14 @@ func tasksUpdated(jobA, jobB *structs.Job, taskGroup string) bool {
 			return true
 		}
 		if !reflect.DeepEqual(at.Templates, bt.Templates) {
+			return true
+		}
+
+		if !reflect.DeepEqual(at.Affinities, bt.Affinities) {
+			return true
+		}
+
+		if !reflect.DeepEqual(at.Constraints, bt.Constraints) {
 			return true
 		}
 

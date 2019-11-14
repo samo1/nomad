@@ -384,6 +384,89 @@ func TestShuffleNodes(t *testing.T) {
 	require.False(t, reflect.DeepEqual(nodes, orig))
 }
 
+func TestTaskUpdatedAffinity(t *testing.T) {
+	j1 := mock.Job()
+	j2 := mock.Job()
+	name := j1.TaskGroups[0].Name
+
+	require.False(t, tasksUpdated(j1, j2, name))
+
+	// TaskGroup Affinity
+	j2.TaskGroups[0].Affinities = []*structs.Affinity{
+		{
+			LTarget: "",
+			RTarget: "",
+			Operand: "",
+			Weight:  100,
+		},
+	}
+	require.True(t, tasksUpdated(j1, j2, name))
+
+	// TaskGroup Task Affinity
+	j3 := mock.Job()
+	j3.TaskGroups[0].Tasks[0].Affinities = []*structs.Affinity{
+		{
+			LTarget: "",
+			RTarget: "",
+			Operand: "",
+			Weight:  100,
+		},
+	}
+
+	require.True(t, tasksUpdated(j1, j3, name))
+
+	j4 := mock.Job()
+	j4.TaskGroups[0].Tasks[0].Affinities = []*structs.Affinity{
+		{
+			LTarget: "",
+			RTarget: "",
+			Operand: "",
+			Weight:  100,
+		},
+	}
+
+	require.True(t, tasksUpdated(j1, j4, name))
+}
+
+func TestTaskUpdated_Constraint(t *testing.T) {
+	j1 := mock.Job()
+	j2 := mock.Job()
+	name := j1.TaskGroups[0].Name
+	require.False(t, tasksUpdated(j1, j2, name))
+
+	// TaskGroup Constraint
+	j2.TaskGroups[0].Constraints = []*structs.Constraint{
+		{
+			LTarget: "kernel",
+			RTarget: "linux",
+			Operand: "=",
+		},
+	}
+
+	// TaskGroup Task Constraint
+	j3 := mock.Job()
+	j3.TaskGroups[0].Tasks[0].Constraints = []*structs.Constraint{
+		{
+			LTarget: "kernel",
+			RTarget: "linux",
+			Operand: "=",
+		},
+	}
+
+	require.True(t, tasksUpdated(j1, j3, name))
+
+	j4 := mock.Job()
+	j4.TaskGroups[0].Tasks[0].Constraints = []*structs.Constraint{
+		{
+			LTarget: "kernel",
+			RTarget: "linux",
+			Operand: "=",
+		},
+	}
+
+	require.True(t, tasksUpdated(j1, j4, name))
+}
+
 func TestTasksUpdated(t *testing.T) {
 	j1 := mock.Job()
 	j2 := mock.Job()
