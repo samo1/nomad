@@ -39,6 +39,10 @@ client connection issues or internal errors, are indicated by exit code 1.
 If the job has specified the region, the -region flag and NOMAD_REGION
 environment variable are overridden and the job's region is used.
 
+The run command will set the `consul_token` of the job based on the following
+precedence, going from highest to lowest: the `-consul_token` flag, the
+`$CONSUL_TOKEN` environment variable and finally the value in the job file.
+
 The run command will set the `vault_token` of the job based on the following
 precedence, going from highest to lowest: the `-vault-token` flag, the
 `$VAULT_TOKEN` environment variable and finally the value in the job file.
