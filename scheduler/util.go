@@ -341,15 +341,6 @@ func tasksUpdated(jobA, jobB *structs.Job, taskGroup string) bool {
 	a := jobA.LookupTaskGroup(taskGroup)
 	b := jobB.LookupTaskGroup(taskGroup)
 
-	// Check Job level Affinities and Constraints
-	if !reflect.DeepEqual(jobA.Affinities, jobB.Affinities) {
-		return true
-	}
-
-	if !reflect.DeepEqual(jobA.Constraints, jobB.Constraints) {
-		return true
-	}
-
 	// If the number of tasks do not match, clearly there is an update
 	if len(a.Tasks) != len(b.Tasks) {
 		return true
@@ -365,13 +356,13 @@ func tasksUpdated(jobA, jobB *structs.Job, taskGroup string) bool {
 		return true
 	}
 
-	// Check that the task group affinities haven't changed
-	if !reflect.DeepEqual(a.Affinities, b.Affinities) {
+	// Check Affinities
+	if affinitiesUpdated(jobA, jobB, taskGroup) {
 		return true
 	}
 
-	// Check that the task group constraints haven't changed
-	if !reflect.DeepEqual(a.Constraints, b.Constraints) {
+	// Check Constraints
+	if constraintsUpdated(jobA, jobB, taskGroup) {
 		return true
 	}
 
@@ -400,14 +391,6 @@ func tasksUpdated(jobA, jobB *structs.Job, taskGroup string) bool {
 			return true
 		}
 		if !reflect.DeepEqual(at.Templates, bt.Templates) {
-			return true
-		}
-
-		if !reflect.DeepEqual(at.Affinities, bt.Affinities) {
-			return true
-		}
-
-		if !reflect.DeepEqual(at.Constraints, bt.Constraints) {
 			return true
 		}
 
@@ -467,6 +450,70 @@ func networkPortMap(n *structs.NetworkResource) map[string]int {
 		m[p.Label] = -1
 	}
 	return m
+}
+
+func affinitiesUpdated(jobA, jobB *structs.Job, taskGroup string) bool {
+	var aAffinities []*structs.Affinity
+	var bAffinities []*structs.Affinity
+
+	tgA := jobA.LookupTaskGroup(taskGroup)
+	tgB := jobB.LookupTaskGroup(taskGroup)
+
+	// append job level affinities
+	aAffinities = append(aAffinities, jobA.Affinities...)
+	aAffinities = append(aAffinities, tgA.Affinities...)
+
+	// append task group affinities
+	bAffinities = append(bAffinities, jobB.Affinities...)
+	bAffinities = append(bAffinities, tgB.Affinities...)
+
+	// append task affinities
+	for _, task := range tgA.Tasks {
+		aAffinities = append(aAffinities, task.Affinities...)
+	}
+
+	// append task affinities
+	for _, task := range tgB.Tasks {
+		bAffinities = append(bAffinities, task.Affinities...)
+	}
+
+	if len(aAffinities) != len(bAffinities) {
+		return true
+	}
+
+	return !reflect.DeepEqual(aAffinities, bAffinities)
+}
+
+func constraintsUpdated(jobA, jobB *structs.Job, taskGroup string) bool {
+	var aConstraints []*structs.Constraint
+	var bConstraints []*structs.Constraint
+
+	tgA := jobA.LookupTaskGroup(taskGroup)
+	tgB := jobB.LookupTaskGroup(taskGroup)
+
+	// append job level constraints
+	aConstraints = append(aConstraints, jobA.Constraints...)
+	aConstraints = append(aConstraints, tgA.Constraints...)
+
+	// append task group constraints
+	bConstraints = append(bConstraints, jobB.Constraints...)
+	bConstraints = append(bConstraints, tgB.Constraints...)
+
+	// append task constraints
+	for _, task := range tgA.Tasks {
+		aConstraints = append(aConstraints, task.Constraints...)
+	}
+
+	// append task constraints
+	for _, task := range tgB.Tasks {
+		bConstraints = append(bConstraints, task.Constraints...)
+	}
+
+	if len(aConstraints) != len(bConstraints) {
+		return true
+	}
+
+	return !reflect.DeepEqual(aConstraints, bConstraints)
 }
 
 // setStatus is used to update the status of the evaluation
