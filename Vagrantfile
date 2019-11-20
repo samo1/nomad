@@ -13,7 +13,7 @@ Vagrant.configure(2) do |config|
 		vmCfg.vm.box = LINUX_BASE_BOX
 		vmCfg.vm.hostname = "linux"
 		vmCfg = configureProviders vmCfg,
-			cpus: suggestedCPUCores()
+			cpus: suggestedCPUCores(), memory: "4096"
 
 		vmCfg = configureLinuxProvisioners(vmCfg)
 
